@@ -1,0 +1,29 @@
+/* Shared primitives used across the components in this kit.
+   Import once globally (e.g. in app/globals.css via @import). */
+
+.kicker {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.display {
+  font-family: "Archivo", system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+/* Reduced-motion escape hatch referenced throughout the components:
+   when this matches, each component's JS skips pinning/animation and
+   this class (added manually where you render a static fallback) makes
+   sure nothing is left invisible. */
+@media (prefers-reduced-motion: reduce) {
+  .reveal-on-scroll {
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+  }
+}

@@ -1,1 +1,11 @@
 .agents/
+.claude/
+node_modules/
+.next/
+out/
+deploy-functions.log
+.firebase/
+screenshots/
+skills-lock.json
+scene02.docx
+www.vaptic.com*
