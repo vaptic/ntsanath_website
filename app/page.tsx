@@ -11,26 +11,16 @@ import Domains from '@/components/sections/Domains'
 import Work from '@/components/sections/Work'
 import Worlds from '@/components/sections/Worlds'
 import Contact from '@/components/sections/Contact'
-import Footer from '@/components/sections/Footer'
-
 export default function Home() {
   useSmoothScroll()
 
   return (
     <>
-      {/* Grain texture overlay */}
       <div className="grain" aria-hidden="true" />
-
-      {/* Boot loader */}
       <Loader />
-
-      {/* Fixed navigation */}
       <Nav />
-
-      {/* Fixed chrome (progress bar, scene counter, film btn, cursor) */}
       <Chrome />
 
-      {/* Main content */}
       <main>
         <Hero />
         <Scale />
@@ -40,8 +30,6 @@ export default function Home() {
         <Worlds />
         <Contact />
       </main>
-
-      <Footer />
     </>
   )
 }

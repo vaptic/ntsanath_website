@@ -19,9 +19,6 @@ const PAUSE_NEXT   = 350
 const MOUSE_X_FACTOR = 22
 const MOUSE_Y_FACTOR = 14
 
-// Must match the CSS fallback in --cursor-size (globals.css)
-const CURSOR_DEFAULT = 26
-
 const WORD_A      = 'Sanath'
 const WORD_B      = 'Jeason'
 const KICKER_TEXT = 'Cybersecurity consultant · VAPT specialist'
@@ -93,7 +90,6 @@ export default function Hero() {
       !charElsRef.current.includes(currentCharRef.current)
     ) {
       if (glitchRef.current) glitchRef.current.style.display = 'none'
-      document.documentElement.style.removeProperty('--cursor-size')
       currentCharRef.current = null
     }
   }, [displayed])
@@ -182,16 +178,10 @@ export default function Hero() {
         if (gA.textContent !== ch) gA.textContent = ch
         if (gB.textContent !== ch) gB.textContent = ch
 
-        // Shrink cursor to the character's rendered height, but never larger than
-        // the default — so large headline letters don't expand it, only small ones shrink it.
-        const size = Math.max(8, Math.min(CURSOR_DEFAULT, Math.round(cr.height)))
-        document.documentElement.style.setProperty('--cursor-size', `${size}px`)
-
         currentCharRef.current = found
       } else {
         if (glitch) glitch.style.display = 'none'
         currentCharRef.current = null
-        document.documentElement.style.removeProperty('--cursor-size')
       }
     }
 
@@ -200,7 +190,6 @@ export default function Hero() {
       mouseTargetY.current = 0
       if (glitchRef.current) glitchRef.current.style.display = 'none'
       currentCharRef.current = null
-      document.documentElement.style.removeProperty('--cursor-size')
     }
 
     const section = sectionRef.current
@@ -228,7 +217,6 @@ export default function Hero() {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
       window.removeEventListener('scroll', onScroll)
       cancelAnimationFrame(rafRef.current)
-      document.documentElement.style.removeProperty('--cursor-size')
       if (section) {
         section.removeEventListener('mousemove', onMouseMove)
         section.removeEventListener('mouseleave', onMouseLeave)
@@ -315,9 +303,7 @@ export default function Hero() {
         <a href="#scale" className="hero-scroll kicker">
           <span>Scroll the story</span>
           <span className="scroll-icon" aria-hidden="true">
-            <svg width="10" height="16" viewBox="0 0 10 16" fill="none">
-              <path d="M5 1v11M1 9l4 4 4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <span style={{ display: 'block', width: '8px', height: '8px', borderRight: '1.5px solid currentColor', borderBottom: '1.5px solid currentColor', transform: 'rotate(45deg)', opacity: .6 }} />
           </span>
         </a>
       </div>

@@ -13,15 +13,14 @@ const SCENES = [
 ]
 
 export default function Chrome() {
-  const progressRef  = useRef<HTMLDivElement>(null)
-  const filmBtnRef   = useRef<HTMLButtonElement>(null)
-  const cursorRingRef = useRef<HTMLDivElement>(null)
+  const progressRef = useRef<HTMLDivElement>(null)
+  const filmBtnRef  = useRef<HTMLButtonElement>(null)
+  const cursorRef   = useRef<HTMLDivElement>(null)
 
   const [currentScene, setCurrentScene] = useState('SCENE 01')
   const [sceneKey, setSceneKey] = useState(0)
   const [audioOn, setAudioOn] = useState(false)
 
-  // Audio refs
   const audioCtxRef    = useRef<AudioContext | null>(null)
   const gainNodeRef    = useRef<GainNode | null>(null)
   const audioEnabledRef = useRef(false)
@@ -31,9 +30,7 @@ export default function Chrome() {
   const lastScrollYRef = useRef(0)
 
   useEffect(() => {
-    // Cursor: dot snaps instantly, ring lags via RAF lerp
     let cursorX = 0, cursorY = 0
-    let ringX   = 0, ringY   = 0
 
     function onMouseMove(e: MouseEvent) {
       cursorX = e.clientX
@@ -41,20 +38,22 @@ export default function Chrome() {
     }
 
     function animateCursor() {
-      ringX += (cursorX - ringX) * 0.12
-      ringY += (cursorY - ringY) * 0.12
-
-      if (cursorRingRef.current) {
-        cursorRingRef.current.style.transform =
-          `translate(calc(${ringX}px - 50%), calc(${ringY}px - 50%))`
+      if (cursorRef.current) {
+        cursorRef.current.style.transform =
+          `translate(${cursorX}px, ${cursorY}px)`
       }
       requestAnimationFrame(animateCursor)
     }
 
+    function onMouseEnter() {
+      document.body.classList.add('has-cursor')
+    }
+
     window.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseenter', onMouseEnter)
+    document.body.classList.add('has-cursor')
     animateCursor()
 
-    // Scroll handler
     function onScroll() {
       const scrollY = window.scrollY
       const docH = document.documentElement.scrollHeight
@@ -87,7 +86,6 @@ export default function Chrome() {
       }
     }
 
-    // Audio RAF loop
     function audioLoop() {
       const g = gainNodeRef.current
       if (g) {
@@ -103,6 +101,7 @@ export default function Chrome() {
 
     return () => {
       window.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseenter', onMouseEnter)
       window.removeEventListener('scroll', onScroll)
       cancelAnimationFrame(rafAudioRef.current)
     }
@@ -163,15 +162,12 @@ export default function Chrome() {
 
   return (
     <>
-      {/* Film-strip progress bar */}
       <div ref={progressRef} className="progress-bar" aria-hidden="true" />
 
-      {/* Scene counter */}
       <div className="scene-counter" aria-live="polite">
         <span key={sceneKey} className="scene-counter-inner">{currentScene}</span>
       </div>
 
-      {/* Film camera button */}
       <button
         ref={filmBtnRef}
         className={`film-btn${audioOn ? ' is-on' : ''}`}
@@ -193,8 +189,10 @@ export default function Chrome() {
         </svg>
       </button>
 
-      {/* Custom cursor — single lagging ring, no dot */}
-      <div ref={cursorRingRef} className="cursor-ring" aria-hidden="true" />
+      <div ref={cursorRef} className="cursor" aria-hidden="true">
+        <div className="cursor-core" />
+        <div className="cursor-ghost" />
+      </div>
     </>
   )
 }

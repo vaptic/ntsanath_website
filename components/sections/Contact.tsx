@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Footer from './Footer'
 
 const EMAIL = 'sanath.jeason@vaptic.com'
 
@@ -32,12 +33,10 @@ export default function Contact() {
     const now = nowRef.current
     if (!secure || !now) return
 
-    // Step 1: draw strikethrough (delay 0.3s for drama)
     setTimeout(() => {
       secure.classList.add('is-struck')
     }, 300)
 
-    // Step 2: reveal "now?" (after strike + fade)
     setTimeout(() => {
       now.classList.add('is-revealed')
     }, 1400)
@@ -61,51 +60,59 @@ export default function Contact() {
 
   return (
     <section id="contact" className="contact" ref={sectionRef}>
-      <p className="kicker contact-kicker">Get in touch</p>
+      <div className="contact-inner">
+        <p className="kicker contact-kicker">Get in touch</p>
 
-      <div className="contact-headline">
-        <div className="contact-headline-inner">
-          <span className="contact-word">What</span>
-          <span className="contact-word">should</span>
-          <span className="contact-word">we</span>
-          <span className="contact-secure" ref={secureRef}>
-            secure
-            <span className="contact-secure-strike" aria-hidden="true" />
-          </span>
-          <span className="contact-now" ref={nowRef}>
-            &nbsp;now?
-          </span>
+        <div className="contact-headline">
+          <div className="contact-headline-inner">
+            <span className="contact-word">What</span>
+            <span className="contact-word">should</span>
+            <span className="contact-word">we</span>
+            <span className="contact-secure" ref={secureRef}>
+              secure
+              <span className="contact-secure-strike" aria-hidden="true" />
+            </span>
+            <span className="contact-now" ref={nowRef}>
+              &nbsp;now?
+            </span>
+          </div>
+        </div>
+
+        <div className="contact-email-wrap">
+          <a
+            href={`mailto:${EMAIL}`}
+            className="contact-email-link"
+            onClick={(e) => {
+              e.preventDefault()
+              copyEmail()
+            }}
+            aria-label={copied ? 'Email copied to clipboard' : 'Click to copy email'}
+          >
+            {copied ? 'Copied ✓' : EMAIL}
+          </a>
+        </div>
+
+        <div className="contact-links">
+          <a
+            href="https://www.linkedin.com/in/sanath-jeason"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="contact-link"
+          >
+            LinkedIn
+          </a>
+          <a
+            href="https://offsyslabs.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="contact-link"
+          >
+            OffSys Labs
+          </a>
         </div>
       </div>
 
-      <div className="contact-email-wrap">
-        <button
-          className="contact-email-btn"
-          onClick={copyEmail}
-          aria-label={copied ? 'Email copied to clipboard' : 'Click to copy email'}
-        >
-          {copied ? 'Copied ✓' : EMAIL}
-        </button>
-      </div>
-
-      <div className="contact-links">
-        <a
-          href="https://www.linkedin.com/in/sanath-jeason"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="contact-link"
-        >
-          LinkedIn ↗
-        </a>
-        <a
-          href="https://offsyslabs.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="contact-link"
-        >
-          OffSys Labs ↗
-        </a>
-      </div>
+      <Footer />
     </section>
   )
 }

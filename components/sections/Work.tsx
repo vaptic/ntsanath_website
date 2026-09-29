@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 
+
 const CASES = [
   {
     num: '01',
@@ -66,23 +67,9 @@ const CASES = [
 ]
 
 export default function Work() {
-  const imgRefs   = useRef<(HTMLImageElement | null)[]>([])
   const mediaRefs = useRef<(HTMLDivElement | null)[]>([])
 
   useEffect(() => {
-    // Subtle vertical parallax on images as user scrolls
-    function onScroll() {
-      imgRefs.current.forEach(img => {
-        if (!img) return
-        const rect = img.getBoundingClientRect()
-        const winH = window.innerHeight
-        const pct  = (winH - rect.top) / (winH + rect.height)
-        img.style.transform = `translateY(${(pct - 0.5) * -80}px)`
-      })
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-
-    // Clip-path reveal: each image panel un-masks as it enters the viewport
     const observers: IntersectionObserver[] = []
     mediaRefs.current.forEach(el => {
       if (!el) return
@@ -102,7 +89,6 @@ export default function Work() {
     })
 
     return () => {
-      window.removeEventListener('scroll', onScroll)
       observers.forEach(o => o.disconnect())
     }
   }, [])
@@ -141,7 +127,6 @@ export default function Work() {
               <img
                 src="/images/sanath-full.jpeg"
                 alt={`${c.title} engagement`}
-                ref={el => { imgRefs.current[i] = el }}
                 style={{ objectPosition: `center ${c.imgOffset}` }}
               />
             </div>
