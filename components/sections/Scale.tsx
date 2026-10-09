@@ -17,6 +17,9 @@ const STAGES = [
 
 const LAYER_AT  = [0.05, 0.11, 0.33, 0.54, 0.75, 0.92]
 const MAX = 500
+// The story finishes at this fraction of the pinned scroll; the rest is a hold,
+// so the final stage rests on screen before the scene hands over to Scene 03.
+const STORY_END = 0.88
 
 function formatCount(n: number): string {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1) + 'M'
@@ -29,7 +32,10 @@ function formatCount(n: number): string {
 // frame (see the RAF smoother) instead of through React state, so the number
 // glides continuously the way jeffmilanes' counter does.
 function numHTML(str: string): string {
-  const chars = str.split('').map(c => `<span class="char">${c}</span>`).join('')
+  const chars = str.split('').map(c =>
+    c === '+' ? `<span class="char scale-num-plus">${c}</span>`
+              : `<span class="char">${c}</span>`
+  ).join('')
   return `<span class="word">${chars}</span>`
 }
 
@@ -87,21 +93,24 @@ const NODES = [
 ]
 
 const EDGES = [
-  { id: 'e-web-fw',      d: 'M 290 91 C 362 91, 378 139, 450 139',    to: 1 },
-  { id: 'e-mob-fw',      d: 'M 450 91 C 490 91, 410 139, 450 139',    to: 1 },
-  { id: 'e-net-fw',      d: 'M 610 91 C 682 91, 378 139, 450 139',    to: 1 },
-  { id: 'e-fw-api',      d: 'M 450 181 C 522 181, 218 229, 290 229',  to: 2 },
-  { id: 'e-fw-svc',      d: 'M 450 181 C 490 181, 410 229, 450 229',  to: 2 },
-  { id: 'e-fw-auth',     d: 'M 450 181 C 522 181, 538 229, 610 229',  to: 2 },
-  { id: 'e-api-data',    d: 'M 290 271 C 362 271, 378 319, 450 319',  to: 3 },
-  { id: 'e-svc-data',    d: 'M 450 271 C 490 271, 410 319, 450 319',  to: 3 },
-  { id: 'e-auth-data',   d: 'M 610 271 C 682 271, 378 319, 450 319',  to: 3 },
-  { id: 'e-data-cache',  d: 'M 450 361 C 522 361, 218 409, 290 409',  to: 4 },
-  { id: 'e-data-sec',    d: 'M 450 361 C 490 361, 410 409, 450 409',  to: 4 },
-  { id: 'e-data-stor',   d: 'M 450 361 C 522 361, 538 409, 610 409',  to: 4 },
-  { id: 'e-cache-cloud', d: 'M 290 451 C 362 451, 378 489, 450 489',  to: 5 },
-  { id: 'e-sec-cloud',   d: 'M 450 451 C 490 451, 410 489, 450 489',  to: 5 },
-  { id: 'e-stor-cloud',  d: 'M 610 451 C 682 451, 378 489, 450 489',  to: 5 },
+  // Vertical-tangent S-curves: each edge leaves its node going straight DOWN and
+  // eases toward the target near the bottom — matches jeffmilanes' clean branch
+  // routing (control points share the start/end x, set at the vertical midpoint).
+  { id: 'e-web-fw',      d: 'M 290 91 C 290 115, 450 115, 450 139',   to: 1 },
+  { id: 'e-mob-fw',      d: 'M 450 91 C 450 115, 450 115, 450 139',   to: 1 },
+  { id: 'e-net-fw',      d: 'M 610 91 C 610 115, 450 115, 450 139',   to: 1 },
+  { id: 'e-fw-api',      d: 'M 450 181 C 450 205, 290 205, 290 229',  to: 2 },
+  { id: 'e-fw-svc',      d: 'M 450 181 C 450 205, 450 205, 450 229',  to: 2 },
+  { id: 'e-fw-auth',     d: 'M 450 181 C 450 205, 610 205, 610 229',  to: 2 },
+  { id: 'e-api-data',    d: 'M 290 271 C 290 295, 450 295, 450 319',  to: 3 },
+  { id: 'e-svc-data',    d: 'M 450 271 C 450 295, 450 295, 450 319',  to: 3 },
+  { id: 'e-auth-data',   d: 'M 610 271 C 610 295, 450 295, 450 319',  to: 3 },
+  { id: 'e-data-cache',  d: 'M 450 361 C 450 385, 290 385, 290 409',  to: 4 },
+  { id: 'e-data-sec',    d: 'M 450 361 C 450 385, 450 385, 450 409',  to: 4 },
+  { id: 'e-data-stor',   d: 'M 450 361 C 450 385, 610 385, 610 409',  to: 4 },
+  { id: 'e-cache-cloud', d: 'M 290 451 C 290 475, 450 475, 450 489',  to: 5 },
+  { id: 'e-sec-cloud',   d: 'M 450 451 C 450 475, 450 475, 450 489',  to: 5 },
+  { id: 'e-stor-cloud',  d: 'M 610 451 C 610 475, 450 475, 450 489',  to: 5 },
 ]
 
 export default function Scale() {
@@ -177,7 +186,7 @@ export default function Scale() {
       scrub: 0.55,
       anticipatePin: 1,
       onUpdate: (self) => {
-        const p = self.progress
+        const p = Math.min(1, self.progress / STORY_END)
         setSvgP(p)
         numTargetRef.current = p
         const idx = Math.min(Math.round(p * (STAGES.length - 1)), STAGES.length - 1)
@@ -187,6 +196,17 @@ export default function Scale() {
         }
       },
     })
+
+    // ── Exit: once the pin lets go, the scene fades as it lifts away, so Scene 03
+    // arrives against black instead of butting up against this one.
+    const pinEl = el.querySelector<HTMLElement>('.scale-pin')
+    const exitTween = pinEl
+      ? gsap.fromTo(pinEl, { opacity: 1 }, {
+          opacity: 0,
+          ease: 'power1.in',
+          scrollTrigger: { trigger: el, start: 'bottom bottom', end: 'bottom 30%', scrub: true },
+        })
+      : null
 
     // ── Filmic counter: ease displayed value toward the scroll target ─────────
     // 0.14 lerp per frame = a gentle trailing glide (same trick as the cursor
@@ -260,6 +280,8 @@ export default function Scale() {
 
     return () => {
       st.kill()
+      exitTween?.scrollTrigger?.kill()
+      exitTween?.kill()
       cancelAnimationFrame(rafNum)
       if (section) {
         section.removeEventListener('mousemove', onMove)
@@ -369,12 +391,11 @@ export default function Scale() {
 
               {/* Edges */}
               {EDGES.map(edge => {
+                // Draw starts the moment this edge's source layer lights up:
+                // is-on fires the CSS 0.9s line-draw + gradient, the dashes fade
+                // in after it finishes, and the packets ride the lit line.
                 const atStart = LAYER_AT[edge.to - 1]
-                const atEnd   = LAYER_AT[edge.to]
-                const active  = svgP >= atEnd
-                const drawing = svgP >= atStart
-                const drawP   = !drawing ? 0 : Math.min(1, (svgP - atStart) / Math.max(atEnd - atStart, 0.001))
-                const dashOff = 1 - drawP
+                const on = svgP >= atStart
 
                 return (
                   <g key={edge.id}>
@@ -383,17 +404,15 @@ export default function Scale() {
                     <path
                       d={edge.d}
                       pathLength={1}
-                      className={`evolve-link${active ? ' is-on' : ''}`}
+                      className={`evolve-link${on ? ' is-on' : ''}`}
                       fill="none"
-                      style={{ strokeDashoffset: dashOff }}
                     />
                     <path
                       d={edge.d}
-                      pathLength={1}
-                      className={`evolve-flow${active ? ' is-on' : ''}`}
+                      className={`evolve-flow${on ? ' is-on' : ''}`}
                       fill="none"
                     />
-                    {active && (
+                    {on && (
                       <>
                         <circle r={2.6} fill="#ffffffcc" style={{ pointerEvents: 'none' }}>
                           <animateMotion dur="2.6s" repeatCount="indefinite" calcMode="linear">
@@ -428,16 +447,18 @@ export default function Scale() {
 
                 return (
                   <g key={node.id} className={cls} transform={`translate(${node.x} ${node.y})`}>
-                    <rect className="evolve-halo"
-                      x={-hw} y={-20} width={hw * 2} height={40} rx={20} />
-                    <rect className="evolve-chip"
-                      x={-hw} y={-20} width={hw * 2} height={40} rx={20} />
-                    <circle className="evolve-dot" cx={dotCX} r={3.2} />
-                    <text x={8} dominantBaseline="central" textAnchor="middle">
-                      {label.split('').map((ch, i) => (
-                        <tspan key={i} className="evolve-char">{ch}</tspan>
-                      ))}
-                    </text>
+                    <g className="evolve-node-vis">
+                      <rect className="evolve-halo"
+                        x={-hw} y={-20} width={hw * 2} height={40} rx={20} />
+                      <rect className="evolve-chip"
+                        x={-hw} y={-20} width={hw * 2} height={40} rx={20} />
+                      <circle className="evolve-dot" cx={dotCX} r={3.2} />
+                      <text x={8} dominantBaseline="central" textAnchor="middle">
+                        {label.split('').map((ch, i) => (
+                          <tspan key={i} className="evolve-char">{ch}</tspan>
+                        ))}
+                      </text>
+                    </g>
                   </g>
                 )
               })}
